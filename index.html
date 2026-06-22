@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R R H & Associates LLP — Work Management</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.3.0/tabler-icons.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-emblem">RRH</div>
+      <h1>R R H & ASSOCIATES LLP</h1>
+      <p>Chartered Accountants — Work Management Portal</p>
+    </div>
+    <label>Username</label>
+    <input type="text" id="loginUser" placeholder="Enter your username" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-login" onclick="doLogin()">
+      <span id="loginBtnText">Sign In</span>
+      <i class="ti ti-arrow-right"></i>
+    </button>
+    <div class="login-error" id="loginError"></div>
+    <p class="login-footer">Accessible from anywhere · Multi-user · Secure</p>
+    <div class="login-setup" id="loginSetup" style="display:none">
+      <hr style="margin:16px 0;border-color:#e5e7eb">
+      <p style="font-size:12px;color:#6b7280;text-align:center;margin-bottom:8px">⚙️ First-time setup: Paste your Apps Script URL below</p>
+      <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/..." style="width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:8px;font-size:12px;margin-bottom:6px">
+      <button onclick="saveScriptUrl()" style="width:100%;padding:8px;background:#1a3a5c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px">Save & Continue</button>
+    </div>
+    <div style="text-align:center;margin-top:12px">
+      <a href="#" onclick="toggleSetup()" style="font-size:11px;color:#9ca3af">⚙️ Configure API</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ══════════════════════════════════════════════ -->
+<div id="appScreen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-badge">RRH</div>
+      <div>
+        <h2>R R H & ASSOCIATES</h2>
+        <span>Chartered Accountants</span>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebarAvatar">RK</div>
+      <div class="sidebar-user-info">
+        <p id="sidebarName">CA Rajesh Kumar</p>
+        <span id="sidebarRole">Partner</span>
+      </div>
+    </div>
+    <nav>
+      <div class="sidebar-section">Main</div>
+      <a class="nav-item active" onclick="showPage('dashboard',this)"><i class="ti ti-dashboard"></i>Dashboard</a>
+      <a class="nav-item" onclick="showPage('tasks',this)"><i class="ti ti-checklist"></i>Tasks <span class="badge-count" id="navTaskCount">0</span></a>
+      <a class="nav-item" onclick="showPage('clients',this)"><i class="ti ti-building"></i>Clients</a>
+      <div class="sidebar-section">Finance</div>
+      <a class="nav-item" onclick="showPage('billing',this)"><i class="ti ti-receipt"></i>Billing & Invoices</a>
+      <a class="nav-item" onclick="showPage('payments',this)"><i class="ti ti-cash"></i>Payments</a>
+      <div class="sidebar-section">Organisation</div>
+      <a class="nav-item" onclick="showPage('team',this)"><i class="ti ti-users"></i>Team</a>
+      <a class="nav-item" onclick="showPage('timesheet',this)"><i class="ti ti-clock"></i>Timesheets</a>
+      <a class="nav-item" onclick="showPage('documents',this)"><i class="ti ti-files"></i>Documents</a>
+      <a class="nav-item" onclick="showPage('deadlines',this)"><i class="ti ti-calendar-event"></i>Due Dates <span class="badge-count danger" id="navDeadlineCount">5</span></a>
+      <div class="sidebar-section">Reports</div>
+      <a class="nav-item" onclick="showPage('reports',this)"><i class="ti ti-chart-bar"></i>Reports</a>
+      <a class="nav-item" onclick="showPage('settings',this)"><i class="ti ti-settings"></i>Settings</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a class="nav-item" onclick="logout()"><i class="ti ti-logout"></i>Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+        <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <i class="ti ti-search"></i>
+          <input placeholder="Search tasks, clients…" oninput="globalSearch(this.value)" id="globalSearchInput">
+        </div>
+        <div class="icon-btn" title="Notifications"><i class="ti ti-bell"></i><div class="notif-dot"></div></div>
+        <div class="avatar topbar-avatar" id="topbarAvatar">RK</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- ── DASHBOARD ─────────────────────────────────── -->
+      <section id="page-dashboard" class="page active">
+        <div class="stats-grid" id="dashStats">
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-checklist"></i> Total Tasks</div><div class="stat-value" id="ds-tasks">—</div><div class="stat-sub">Loading…</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-building"></i> Clients</div><div class="stat-value" id="ds-clients">—</div><div class="stat-sub">Active</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-receipt"></i> Pending Bills</div><div class="stat-value" id="ds-pending">—</div><div class="stat-sub">Unpaid invoices</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-alert-circle"></i> Overdue Tasks</div><div class="stat-value danger" id="ds-overdue">—</div><div class="stat-sub">Need attention</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-clock"></i> In Review</div><div class="stat-value info" id="ds-review">—</div><div class="stat-sub">Awaiting approval</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="ti ti-users"></i> Team</div><div class="stat-value" id="ds-team">—</div><div class="stat-sub">Members</div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><h3><i class="ti ti-alert-circle" style="color:var(--danger)"></i> Overdue Tasks</h3><button class="btn btn-secondary btn-sm" onclick="showPage('tasks',null)">View All</button></div>
+            <div class="table-wrap"><table id="dashOverdueTable"><thead><tr><th>Task</th><th>Client</th><th>Assigned</th><th>Due</th></tr></thead><tbody><tr><td colspan="4" class="empty-row">Loading…</td></tr></tbody></table></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3><i class="ti ti-clock" style="color:var(--info)"></i> Pending Review</h3><button class="btn btn-secondary btn-sm" onclick="showPage('tasks',null)">View All</button></div>
+            <div class="table-wrap"><table id="dashReviewTable"><thead><tr><th>Task</th><th>Assigned</th><th>Reviewer</th></tr></thead><tbody><tr><td colspan="3" class="empty-row">Loading…</td></tr></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TASKS ──────────────────────────────────────── -->
+      <section id="page-tasks" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('addTaskModal')"><i class="ti ti-plus"></i> New Task</button>
+          <select class="fi sm" id="filterGroup" onchange="renderTasks()"><option value="">All Groups</option><option>GST</option><option>Income Tax</option><option>Audit</option><option>ROC</option><option>Payroll</option><option>Accounts</option><option>Advisory</option><option>MCA/ROC</option></select>
+          <select class="fi sm" id="filterStatus" onchange="renderTasks()"><option value="">All Status</option><option>Pending</option><option>In Progress</option><option>Review</option><option>Done</option></select>
+          <select class="fi sm" id="filterPriority" onchange="renderTasks()"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Task Name</th><th>Group</th><th>Client</th><th>Head</th><th>Assigned To</th><th>Reviewed By</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Invoice</th><th>Actions</th></tr></thead>
+              <tbody id="taskTableBody"><tr><td colspan="12" class="empty-row"><i class="ti ti-loader spin"></i> Loading tasks…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CLIENTS ─────────────────────────────────────── -->
+      <section id="page-clients" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('addClientModal')"><i class="ti ti-plus"></i> Add Client</button>
+          <select class="fi sm" id="filterClientType" onchange="renderClients()"><option value="">All Types</option><option>Company</option><option>Partnership</option><option>Individual</option><option>LLP</option><option>Trust</option><option>HUF</option></select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Client Name</th><th>Type</th><th>GSTIN</th><th>PAN</th><th>Mobile</th><th>Partner</th><th>Tasks</th><th>Outstanding</th><th>Actions</th></tr></thead>
+              <tbody id="clientTableBody"><tr><td colspan="10" class="empty-row"><i class="ti ti-loader spin"></i> Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── BILLING ─────────────────────────────────────── -->
+      <section id="page-billing" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="showBillingTab('create')"><i class="ti ti-plus"></i> New Invoice</button>
+          <button class="btn btn-secondary" onclick="showBillingTab('list')"><i class="ti ti-list"></i> All Invoices</button>
+          <button class="btn btn-secondary" onclick="showBillingTab('template')"><i class="ti ti-palette"></i> Bill Template</button>
+        </div>
+
+        <!-- Invoice List -->
+        <div id="billing-list">
+          <div class="card">
+            <div class="card-header"><h3>All Invoices</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Invoice No</th><th>Client</th><th>Task</th><th>Date</th><th>Amount</th><th>GST</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="invoiceTableBody"><tr><td colspan="9" class="empty-row"><i class="ti ti-loader spin"></i> Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Invoice -->
+        <div id="billing-create" style="display:none">
+          <div class="card">
+            <div class="card-header"><h3>Create Invoice</h3><button class="btn btn-secondary btn-sm" onclick="showBillingTab('list')"><i class="ti ti-arrow-left"></i> Back</button></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Client</label><select class="fi" id="inv_client"><option value="">Select client…</option></select></div>
+                <div class="form-group"><label class="fl">Related Task</label><select class="fi" id="inv_task"><option value="">Select task…</option></select></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Invoice Date</label><input type="date" class="fi" id="inv_date"></div>
+                <div class="form-group"><label class="fl">Due Date</label><input type="date" class="fi" id="inv_due"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Service Description</label><input class="fi" id="inv_desc" placeholder="e.g. GST Return filing Oct 2024"></div>
+                <div class="form-group"><label class="fl">Amount (₹)</label><input type="number" class="fi" id="inv_amount" oninput="calcInvoice()" placeholder="0"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">GST Rate</label><select class="fi" id="inv_gstrate" onchange="calcInvoice()"><option value="18">18% (Standard)</option><option value="12">12%</option><option value="0">0% (Exempt)</option></select></div>
+                <div class="form-group"><label class="fl">GST Amount (₹)</label><input class="fi" id="inv_gst" readonly style="background:var(--bg)"></div>
+              </div>
+              <div class="inv-total-bar">
+                <span>Grand Total</span>
+                <span id="inv_total">₹ 0.00</span>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Notes / Payment Terms</label><textarea class="fi" id="inv_notes" placeholder="Bank details, payment due date…"></textarea></div>
+                <div class="form-group"><label class="fl">Payment Status</label><select class="fi" id="inv_status"><option>Unpaid</option><option>Partial</option><option>Paid</option></select></div>
+              </div>
+              <button class="btn btn-primary" onclick="saveInvoice()"><i class="ti ti-file-invoice"></i> Generate Invoice</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice Preview -->
+        <div id="billing-preview" style="display:none">
+          <div class="inv-preview-wrap">
+            <div class="invoice-preview" id="invoicePrintArea">
+              <div class="inv-header">
+                <div>
+                  <div class="inv-firm-name" id="inv_firm_name">R R H & ASSOCIATES LLP</div>
+                  <div class="inv-sub" id="inv_firm_sub">Chartered Accountants</div>
+                  <div class="inv-sub" id="inv_firm_addr">123, CA Tower, Banjara Hills, Hyderabad – 500034</div>
+                  <div class="inv-sub" id="inv_firm_gstin">GSTIN: 36AABCR1234F1Z9</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="inv-label">TAX INVOICE</div>
+                  <div style="font-size:14px;font-weight:700" id="prev_invno">INV-2024-001</div>
+                  <div class="inv-sub" id="prev_date">Date: —</div>
+                  <div class="inv-sub" id="prev_duedate">Due: —</div>
+                </div>
+              </div>
+              <div class="inv-bill-to">
+                <div style="font-size:11px;color:#6b7280;margin-bottom:2px">Bill To:</div>
+                <div style="font-weight:700;font-size:15px" id="prev_client">—</div>
+                <div class="inv-sub" id="prev_gstin">—</div>
+              </div>
+              <table class="inv-table">
+                <tr><th>Description</th><th>SAC</th><th>Amount</th><th>CGST</th><th>SGST</th><th>Total</th></tr>
+                <tr>
+                  <td id="prev_desc">—</td><td>998232</td>
+                  <td id="prev_amt">₹0</td>
+                  <td id="prev_cgst">₹0</td>
+                  <td id="prev_sgst">₹0</td>
+                  <td id="prev_total">₹0</td>
+                </tr>
+              </table>
+              <div class="inv-grand-total" id="prev_grand">Grand Total: ₹0</div>
+              <div class="inv-footer" id="inv_firm_bank">Bank: HDFC Bank · A/C: 50100123456789 · IFSC: HDFC0001234</div>
+              <div class="inv-sign">
+                <div style="font-weight:700">For R R H & ASSOCIATES LLP</div>
+                <div style="color:#9ca3af;margin-top:32px;font-size:12px">Authorised Signatory</div>
+              </div>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="window.print()"><i class="ti ti-printer"></i> Print / PDF</button>
+            <button class="btn btn-secondary" onclick="showBillingTab('list')"><i class="ti ti-arrow-left"></i> Back</button>
+            <button class="btn btn-secondary" onclick="showBillingTab('template')"><i class="ti ti-palette"></i> Edit Template</button>
+          </div>
+        </div>
+
+        <!-- Template Editor -->
+        <div id="billing-template" style="display:none">
+          <div class="card">
+            <div class="card-header"><h3>Customize Invoice Template</h3><button class="btn btn-secondary btn-sm" onclick="showBillingTab('list')"><i class="ti ti-arrow-left"></i> Back</button></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Firm Name</label><input class="fi" id="tmpl_name" value="R R H & ASSOCIATES LLP"></div>
+                <div class="form-group"><label class="fl">Tagline</label><input class="fi" id="tmpl_tagline" value="Chartered Accountants"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group full"><label class="fl">Office Address</label><textarea class="fi" id="tmpl_addr">123, CA Tower, Banjara Hills, Hyderabad – 500034, Telangana</textarea></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">GSTIN</label><input class="fi" id="tmpl_gstin" value="36AABCR1234F1Z9"></div>
+                <div class="form-group"><label class="fl">PAN</label><input class="fi" id="tmpl_pan" value="AABCR1234F"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Bank Name</label><input class="fi" id="tmpl_bank" value="HDFC Bank"></div>
+                <div class="form-group"><label class="fl">Account Number</label><input class="fi" id="tmpl_acc" value="50100123456789"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">IFSC Code</label><input class="fi" id="tmpl_ifsc" value="HDFC0001234"></div>
+                <div class="form-group"><label class="fl">Logo (URL or upload)</label><input class="fi" id="tmpl_logo" placeholder="https://… or leave blank"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="fl">Primary Color</label><input type="color" id="tmpl_color1" value="#1a3a5c" style="height:38px;width:70px;border-radius:8px;border:1px solid var(--border);padding:2px;cursor:pointer"></div>
+                <div class="form-group"><label class="fl">Accent Color</label><input type="color" id="tmpl_color2" value="#d4960a" style="height:38px;width:70px;border-radius:8px;border:1px solid var(--border);padding:2px;cursor:pointer"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group full"><label class="fl">Footer / Terms</label><textarea class="fi" id="tmpl_footer">Subject to Hyderabad jurisdiction. Payment due within 15 days of invoice date.</textarea></div>
+              </div>
+              <button class="btn btn-primary" onclick="saveTemplate()"><i class="ti ti-device-floppy"></i> Save Template</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── PAYMENTS ────────────────────────────────────── -->
+      <section id="page-payments" class="page">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-label">Total Billed</div><div class="stat-value" id="pay_total">₹0</div></div>
+          <div class="stat-card"><div class="stat-label">Received</div><div class="stat-value success" id="pay_received">₹0</div></div>
+          <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value danger" id="pay_outstanding">₹0</div></div>
+          <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value danger" id="pay_overdue">₹0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Payment Tracker</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Invoice</th><th>Client</th><th>Billed</th><th>Amount</th><th>Received</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="paymentTableBody"><tr><td colspan="8" class="empty-row"><i class="ti ti-loader spin"></i> Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TEAM ───────────────────────────────────────── -->
+      <section id="page-team" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('addUserModal')"><i class="ti ti-user-plus"></i> Add Member</button>
+          <select class="fi sm" id="filterRole" onchange="renderTeam()"><option value="">All Roles</option><option>Partner</option><option>Asst. Manager</option><option>Team Lead</option><option>Article</option></select>
+        </div>
+        <div id="teamGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
+          <div class="card" style="padding:24px;text-align:center;color:var(--text-muted)"><i class="ti ti-loader spin" style="font-size:24px"></i></div>
+        </div>
+      </section>
+
+      <!-- ── TIMESHEETS ─────────────────────────────────── -->
+      <section id="page-timesheet" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('logTimeModal')"><i class="ti ti-plus"></i> Log Time</button>
+          <select class="fi sm" id="filterTSMonth" onchange="renderTimesheets()">
+            <option value="">All Months</option>
+            <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
+            <option>May</option><option>Jun</option><option>Jul</option><option>Aug</option>
+            <option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Staff</th><th>Client</th><th>Task</th><th>Hours</th><th>Description</th><th>Actions</th></tr></thead>
+              <tbody id="timesheetTableBody"><tr><td colspan="7" class="empty-row"><i class="ti ti-loader spin"></i> Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── DOCUMENTS ──────────────────────────────────── -->
+      <section id="page-documents" class="page">
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="openModal('addDocModal')"><i class="ti ti-upload"></i> Upload Document</button>
+          <select class="fi sm" id="filterDocCat" onchange="renderDocuments()"><option value="">All Categories</option><option>GST</option><option>Income Tax</option><option>Audit</option><option>ROC</option><option>Payroll</option><option>Client Docs</option></select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Document</th><th>Category</th><th>Client</th><th>Uploaded By</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody id="docTableBody"><tr><td colspan="6" class="empty-row"><i class="ti ti-loader spin"></i> Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── DUE DATES ──────────────────────────────────── -->
+      <section id="page-deadlines" class="page">
+        <div class="card">
+          <div class="card-header"><h3><i class="ti ti-calendar-event" style="color:var(--danger)"></i> Statutory Compliance Calendar</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Due Date</th><th>Compliance</th><th>Form / Challan</th><th>Applicable To</th><th>Assigned</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="deadlineTableBody">
+                <tr><td class="overdue-date"><b>10th</b></td><td>TDS Deposit</td><td>Challan 281</td><td>All Deductors</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>11th</b></td><td>ESI Contribution</td><td>ECR</td><td>Employers (10+ staff)</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>15th</b></td><td>PF Deposit</td><td>ECR</td><td>Employers</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>20th</b></td><td>GSTR-3B Filing</td><td>GSTR-3B</td><td>GST Registered (Monthly)</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>25th</b></td><td>GSTR-1 (Monthly)</td><td>GSTR-1</td><td>Monthly filers</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>30th/31st</b></td><td>TDS Return</td><td>24Q / 26Q / 27Q</td><td>All Deductors (Quarterly)</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>15 Dec / 15 Mar</b></td><td>Advance Tax</td><td>Challan 280</td><td>Companies / HNI</td><td>—</td><td><span class="badge badge-pending">Pending</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>31 Oct</b></td><td>Income Tax Return (Audit)</td><td>ITR-6 / ITR-3</td><td>Audit Cases</td><td>—</td><td><span class="badge badge-done">Done</span></td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+                <tr><td><b>31 Dec</b></td><td>ROC Annual Filing</td><td>MGT-7 / AOC-4</td><td>Companies</td><td>—</td><td><span class="badge badge-progress">In Progress</span></td><td><button class="btn btn-secondary btn-sm">Assign</button></td></tr>
+                <tr><td><b>30 Sep</b></td><td>Tax Audit</td><td>Form 3CA/3CB</td><td>Turnover above threshold</td><td>—</td><td><span class="badge badge-done">Done</span></td><td><button class="btn btn-secondary btn-sm">View</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── REPORTS ────────────────────────────────────── -->
+      <section id="page-reports" class="page">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+          <div class="report-card" onclick="generateReport('task-summary')"><i class="ti ti-chart-bar"></i><div>Task Summary</div><div class="text-muted">By status, staff, period</div></div>
+          <div class="report-card" onclick="generateReport('billing')"><i class="ti ti-receipt"></i><div>Billing Report</div><div class="text-muted">Revenue & outstanding</div></div>
+          <div class="report-card" onclick="generateReport('timesheet')"><i class="ti ti-clock"></i><div>Timesheet Report</div><div class="text-muted">Hours by staff / task</div></div>
+          <div class="report-card" onclick="generateReport('performance')"><i class="ti ti-users"></i><div>Staff Performance</div><div class="text-muted">Tasks done, TAT</div></div>
+          <div class="report-card" onclick="generateReport('client-ledger')"><i class="ti ti-building"></i><div>Client Ledger</div><div class="text-muted">Per-client workload</div></div>
+          <div class="report-card" onclick="generateReport('compliance')"><i class="ti ti-calendar"></i><div>Compliance Calendar</div><div class="text-muted">Monthly due dates</div></div>
+          <div class="report-card" onclick="generateReport('outstanding')"><i class="ti ti-cash"></i><div>Outstanding Fees</div><div class="text-muted">Unpaid invoices</div></div>
+          <div class="report-card" onclick="generateReport('gst-summary')"><i class="ti ti-file-invoice"></i><div>GST Summary</div><div class="text-muted">GSTIN-wise filings</div></div>
+        </div>
+        <div id="reportOutput" style="margin-top:20px;display:none"></div>
+      </section>
+
+      <!-- ── SETTINGS ───────────────────────────────────── -->
+      <section id="page-settings" class="page">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this)">Firm Profile</div>
+          <div class="tab" onclick="switchTab(this)">API Config</div>
+          <div class="tab" onclick="switchTab(this)">Passwords</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Firm Profile</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group"><label class="fl">Firm Name</label><input class="fi" value="R R H & ASSOCIATES LLP"></div>
+              <div class="form-group"><label class="fl">Registration No.</label><input class="fi" value="LLP-AP-0012345"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="fl">GSTIN</label><input class="fi" value="36AABCR1234F1Z9"></div>
+              <div class="form-group"><label class="fl">ICAI Membership</label><input class="fi" value="001234"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group full"><label class="fl">Office Address</label><textarea class="fi">123, CA Tower, Banjara Hills, Hyderabad – 500034, Telangana</textarea></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="fl">Phone</label><input class="fi" placeholder="+91 40 12345678"></div>
+              <div class="form-group"><label class="fl">Email</label><input class="fi" placeholder="info@rrh.com"></div>
+            </div>
+            <button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Profile</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-header"><h3>Apps Script API URL</h3></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Paste your deployed Google Apps Script Web App URL here. All data will sync to your Google Sheet.</p>
+            <div class="form-group">
+              <label class="fl">Script URL</label>
+              <input class="fi" id="settingsScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+            </div>
+            <button class="btn btn-primary" onclick="saveScriptUrlFromSettings()"><i class="ti ti-device-floppy"></i> Save URL</button>
+            <button class="btn btn-secondary" style="margin-left:8px" onclick="testConnection()"><i class="ti ti-plug"></i> Test Connection</button>
+            <div id="connectionStatus" style="margin-top:10px;font-size:13px"></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-content -->
+  </main>
+</div><!-- /appScreen -->
+
+<!-- ══ MODALS ════════════════════════════════════════════════ -->
+
+<!-- Add Task -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add New Task</h3><button class="modal-close" onclick="closeModal('addTaskModal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Task Name *</label><input class="fi" id="t_name" placeholder="e.g. GST Return Filing"></div>
+        <div class="form-group"><label class="fl">Client *</label><select class="fi" id="t_client"><option value="">Select…</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Task Group</label><select class="fi" id="t_group"><option>GST</option><option>Income Tax</option><option>Audit</option><option>ROC</option><option>MCA/ROC</option><option>Payroll</option><option>Accounts</option><option>Advisory</option></select></div>
+        <div class="form-group"><label class="fl">Sub-task of</label><select class="fi" id="t_parent"><option value="">— Main Task —</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Head (Partner)</label><select class="fi" id="t_head"></select></div>
+        <div class="form-group"><label class="fl">Assigned To</label><select class="fi" id="t_assign"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Reviewed By</label><select class="fi" id="t_review"></select></div>
+        <div class="form-group"><label class="fl">Priority</label><select class="fi" id="t_priority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Due Date</label><input type="date" class="fi" id="t_due"></div>
+        <div class="form-group"><label class="fl">Status</label><select class="fi" id="t_status"><option>Pending</option><option>In Progress</option><option>Review</option><option>Done</option></select></div>
+      </div>
+      <div class="form-group full"><label class="fl">Description / Notes</label><textarea class="fi" id="t_desc" placeholder="Task instructions, documents needed…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()"><i class="ti ti-check"></i> Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Client -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add New Client</h3><button class="modal-close" onclick="closeModal('addClientModal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Client Name *</label><input class="fi" id="c_name" placeholder="Entity / Person name"></div>
+        <div class="form-group"><label class="fl">Entity Type</label><select class="fi" id="c_type"><option>Company</option><option>Partnership</option><option>LLP</option><option>Individual</option><option>Trust</option><option>HUF</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">GSTIN</label><input class="fi" id="c_gstin" placeholder="15-digit GSTIN" maxlength="15" style="text-transform:uppercase"></div>
+        <div class="form-group"><label class="fl">PAN</label><input class="fi" id="c_pan" placeholder="10-char PAN" maxlength="10" style="text-transform:uppercase"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Contact Person</label><input class="fi" id="c_contact" placeholder="Name"></div>
+        <div class="form-group"><label class="fl">Mobile</label><input class="fi" id="c_mobile" placeholder="10-digit number" maxlength="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Email</label><input class="fi" id="c_email" placeholder="client@email.com"></div>
+        <div class="form-group"><label class="fl">Assigned Partner</label><select class="fi" id="c_partner"></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addClientModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()"><i class="ti ti-check"></i> Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add User -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <div class="modal-header"><h3>Add Team Member</h3><button class="modal-close" onclick="closeModal('addUserModal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Full Name *</label><input class="fi" id="u_name"></div>
+        <div class="form-group"><label class="fl">Role</label><select class="fi" id="u_role"><option>Partner</option><option>Asst. Manager</option><option>Team Lead</option><option>Article</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Username *</label><input class="fi" id="u_username" placeholder="firstname (lowercase)"></div>
+        <div class="form-group"><label class="fl">Password</label><input type="password" class="fi" id="u_password" value="rrhlogin"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Email</label><input class="fi" id="u_email"></div>
+        <div class="form-group"><label class="fl">Mobile</label><input class="fi" id="u_mobile"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Reports To</label><select class="fi" id="u_reports"></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="ti ti-check"></i> Create Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- Log Time -->
+<div class="modal-overlay" id="logTimeModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header"><h3>Log Time</h3><button class="modal-close" onclick="closeModal('logTimeModal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Date</label><input type="date" class="fi" id="ts_date"></div>
+        <div class="form-group"><label class="fl">Hours</label><input type="number" class="fi" id="ts_hours" placeholder="3.5" step="0.5" min="0.5" max="24"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Client</label><select class="fi" id="ts_client"><option value="">Select…</option></select></div>
+        <div class="form-group"><label class="fl">Task</label><select class="fi" id="ts_task"><option value="">Select…</option></select></div>
+      </div>
+      <div class="form-group"><label class="fl">Description of Work</label><textarea class="fi" id="ts_desc" placeholder="What was done?"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('logTimeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTimesheet()"><i class="ti ti-check"></i> Log Hours</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document -->
+<div class="modal-overlay" id="addDocModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header"><h3>Upload Document</h3><button class="modal-close" onclick="closeModal('addDocModal')"><i class="ti ti-x"></i></button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Document Name</label><input class="fi" id="doc_name" placeholder="e.g. GSTR-3B_Oct2024.pdf"></div>
+        <div class="form-group"><label class="fl">Category</label><select class="fi" id="doc_cat"><option>GST</option><option>Income Tax</option><option>Audit</option><option>ROC</option><option>Payroll</option><option>Client Docs</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="fl">Client</label><select class="fi" id="doc_client"><option value="">Select…</option></select></div>
+        <div class="form-group"><label class="fl">Google Drive Link</label><input class="fi" id="doc_url" placeholder="https://drive.google.com/…"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addDocModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDocument()"><i class="ti ti-check"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
